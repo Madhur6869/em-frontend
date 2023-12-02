@@ -19,6 +19,12 @@ export default function dashboard() {
   const [email, setEmail] = useState();
   const [username, setUsername] = useState();
   const [role, setRole] = useState();
+  const [interests, setInterests] = useState();
+  const [viewInterests, setViewInterests] = useState();
+  const [updatedInterests, setUpdatedInterests] = useState([]);
+
+  const [isEditEnabled, setIsEditEnabled] = useState(false);
+
 
   useEffect(() => {
     if (session?.user?.uid) setUID(session.user.uid);
@@ -30,6 +36,17 @@ export default function dashboard() {
   useEffect(() => {
     if (email) isOTPEnabled();
   }, [email, verifiedOTP]);
+
+  useEffect(() => {
+    if (uid) fetchProfileDetails();
+  }, [uid]);
+
+  useEffect(() => {
+    if (interests) {
+      setUpdatedInterests(interests);
+      setViewInterests(interests.join(", "));
+    }
+  }, [interests]);
 
   // checks if user has MFA enabled.
   const isOTPEnabled = async () => {
@@ -91,6 +108,65 @@ export default function dashboard() {
     }
   };
 
+  //fetch profile details
+  const fetchProfileDetails = async () => {
+    try {
+      const response = await axiosAuth.get(
+        `/customer/profile-details?customer_id=${uid}`
+      );
+      setInterests(response.data.data.profileDetails.interested_sports);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const s1Change = (e) => {
+    if (updatedInterests.includes("Football")) {
+      setUpdatedInterests(e => e.filter(sport => sport !== "Football"));
+    }
+    else {
+      setUpdatedInterests(e => [...e, "Football"]);
+    }
+  };
+  const s2Change = (e) => {
+    if (updatedInterests.includes("Badminton")) {
+      setUpdatedInterests(e => e.filter(sport => sport !== "Badminton"));
+    }
+    else {
+      setUpdatedInterests(e => [...e, "Badminton"]);
+    }
+    console.log(updatedInterests);
+  };
+  const s3Change = (e) => {
+    if (updatedInterests.includes("Tennis")) {
+      setUpdatedInterests(e => e.filter(sport => sport !== "Tennis"));
+    }
+    else {
+      setUpdatedInterests(e => [...e, "Tennis"]);
+    }
+    console.log(updatedInterests);
+  };
+
+  // update interests
+  const saveInterests = async (e) => {
+    e.preventDefault();
+
+    let reqBody = {
+      customerid: uid,
+      interested_sports: updatedInterests
+    };
+
+    await axiosAuth
+      .post("/customer/update-profile", reqBody)
+      .then(async () => {
+        fetchProfileDetails();
+        setIsEditEnabled(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   return (
     <main className="pt-4" >
       <title>Profile</title>
@@ -100,6 +176,53 @@ export default function dashboard() {
           <p className="pb-1">Username: {username}</p>
           <p className="pb-1">Email: {email}</p>
           <p className="pb-1">Role: {role}</p>
+          {!isEditEnabled && (
+            <div>
+              <p className="pb-1">Interests: {viewInterests}</p>
+              <button
+                type="button"
+                onClick={() => setIsEditEnabled(!isEditEnabled)}
+                className="text-blue-600 hover:text-blue-800 pb-3"
+              >
+                Update interests
+              </button>
+            </div>
+          )}
+          {isEditEnabled && (
+            <div>
+              <p className="pb-2">Interests: </p>
+              <div className="mb-4 flex flex-col items-start bg-gray-200 p-2">
+                <div>
+                  <label className='pr-2' htmlFor="sport">Football</label>
+                  <input name="sport1"
+                    checked={updatedInterests.includes("Football")}
+                    onChange={(e) => s1Change(e)} type="checkbox" className="mr-2" />
+                </div>
+
+                <div>
+                  <label className='pr-2' htmlFor="sport">Badminton</label>
+                  <input name="sport2"
+                    checked={updatedInterests.includes("Badminton")}
+                    onChange={(e) => s2Change(e)} type="checkbox" className="mr-2" />
+                </div>
+
+                <div>
+                  <label className='pr-2' htmlFor="sport">Tennis</label>
+                  <input name="sport3"
+                    checked={updatedInterests.includes("Tennis")}
+                    onChange={(e) => s3Change(e)} type="checkbox" className="mr-2" />
+                </div>
+
+                <button
+                type='button'
+                  class="text-blue-600 hover:text-blue-800 pt-2"
+                  onClick={saveInterests}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          )}
           <p className="pb-1">MFA active: {verifiedOTP.toString()}</p>
         </div>
       </div>
