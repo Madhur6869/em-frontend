@@ -135,9 +135,9 @@ const VenueDetails = () => {
                     console.log("click");
                     setPaymentModalOpen(true);
                   }}
-                  disabled={!(venueDetails.participants_uids.length<venueDetails.participantsLimit) || venueDetails.participants_uids.includes(uid)}
+                  disabled={!(venueDetails.participants_uids.length<venueDetails.participantsLimit) || venueDetails.participants_uids.includes(uid) && venueDetails?.availability}
                   className={`mt-4 px-4 py-2 rounded focus:outline-none focus:ring focus:ring-blue-300 ${
-                    (venueDetails.participants_uids.length<venueDetails.participantsLimit && !venueDetails.participants_uids.includes(uid))
+                    (venueDetails.participants_uids.length<venueDetails.participantsLimit && !venueDetails.participants_uids.includes(uid)) && venueDetails?.availability
                       ? "bg-blue-500 text-white hover:bg-blue-600"
                       : "bg-gray-500 text-gray-300 cursor-not-allowed"
                   }`}
